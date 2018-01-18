@@ -140,9 +140,9 @@ namespace Shopping.Web.Controllers
         //
         // GET: /Account/Register
         [AllowAnonymous]
-        public async Task<ActionResult> Register()
+        public ActionResult Register()
         {
-            return View();
+            return  View();
         }
 
         //
