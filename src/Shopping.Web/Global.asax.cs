@@ -38,7 +38,7 @@
                 });
             });
 
-            _busHandle = _bus.Start();
+            _busHandle = MassTransit.Util.TaskUtil.Await<BusHandle>(()=>_bus.StartAsync());
         }
 
         protected void Application_End()

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Configuration;
+    using System.Threading.Tasks;
     using Automatonymous;
     using CartTracking;
     using MassTransit;
@@ -60,8 +61,9 @@
 
                 x.ReceiveEndpoint(host, ConfigurationManager.AppSettings["SchedulerQueueName"], e =>
                 {
-                    x.UseMessageScheduler(e.InputAddress);
+					// For MT4.0, prefetch must be set for Quartz prior to anything else
                     e.PrefetchCount = 1;
+                    x.UseMessageScheduler(e.InputAddress);                   
 
                     e.Consumer(() => new ScheduleMessageConsumer(_scheduler));
                     e.Consumer(() => new CancelScheduledMessageConsumer(_scheduler));
@@ -72,7 +74,7 @@
 
             try
             {
-                _busHandle = _busControl.Start();
+                _busHandle = MassTransit.Util.TaskUtil.Await<BusHandle>(()=>_busControl.StartAsync());
 
                 _scheduler.JobFactory = new MassTransitJobFactory(_busControl);
 
@@ -104,9 +106,8 @@
 
         static IScheduler CreateScheduler()
         {
-            ISchedulerFactory schedulerFactory = new StdSchedulerFactory();
-
-            IScheduler scheduler = schedulerFactory.GetScheduler();
+            ISchedulerFactory schedulerFactory = new StdSchedulerFactory();            
+            IScheduler scheduler = MassTransit.Util.TaskUtil.Await<IScheduler>(() => schedulerFactory.GetScheduler()); ;
 
             return scheduler;
         }
